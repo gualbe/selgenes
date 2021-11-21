@@ -19,10 +19,10 @@ cluster <- function () {
   return(cl)
 }
 
-selgenes_file <- function (input_file, genetypes_filename = c("data/biomart_human_type.tsv", "data/biomart_celegans_type.tsv")) {
+selgenes_file <- function (input_file, genetypes_filename = c("data/biomart_human_type.tsv", "data/biomart_celegans_type.tsv"), genetypes_filter = c("protein_coding")) {
   
   # Extract, transform and load gene fold changes from experiments.
-  data = etl_experiments(input_file, genetypes_filename)
+  data = etl_experiments(input_file, genetypes_filename, genetypes_filter)
   xgene = data$xgene
   
   # Select genes by using all available methods.
@@ -37,9 +37,10 @@ selgenes_file <- function (input_file, genetypes_filename = c("data/biomart_huma
   fwrite(data.table(res$inverse_scores), paste0(output_path_basename, "_selgenes_inverse_scores.csv"), row.names = F, col.names = T)
   fwrite(data.table(res$scores), paste0(output_path_basename, "_all_scores.csv"), row.names = F, col.names = T)
   
+  return(res)
 }
 
-etl_experiments <- function (filename, genetypes_filename) {
+etl_experiments <- function (filename, genetypes_filename, genetypes_filter) {
   # Read fold change values from a experiments file.
   data = fread(filename, header=T, blank.lines.skip=T)
   
@@ -64,9 +65,10 @@ etl_experiments <- function (filename, genetypes_filename) {
   # Filter genes with type "protein_coding".
   i = 1; ok = FALSE
   while (!ok & i <= length(genetypes_filename)) {
+    browser()
     types = fread(genetypes_filename[i])
     types = types[, `Gene type`:=as.factor(`Gene type`)]
-    coding_genenames = types[`Gene type` == "protein_coding"]$`Gene stable ID`
+    coding_genenames = types[`Gene type` %in% genetypes_filter]$`Gene stable ID`  ## Gualberto 2021-11-21 (allowing any multiple gene types as filter)
     data_filtered = data[Gene %in% coding_genenames]
     if (nrow(data_filtered) > 0) ok = TRUE
     i = i + 1

@@ -13,6 +13,9 @@ cl = cluster()
 # For each input file.
 for (file in input_genes) {
   selgenes_file(file)
+  # To allow other gene types different to the default (protein_coding), use: 
+  # e.g. to use both protein_coding and lncRNA gene types
+  # selgenes_file(file, genetypes_filter = c("protein_coding", "lncRNA")) 
 }
 
 # Stop cluster.
